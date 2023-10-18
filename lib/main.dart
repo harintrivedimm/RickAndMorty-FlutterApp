@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const RickAndMortyApp());
@@ -11,6 +13,7 @@ class RickAndMortyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Rick & Morty',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE6E0E9)),
@@ -31,9 +34,38 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final PageController controller = PageController();
+
+  bool showContent = true;
   final int total = 3;
   int page = 1;
+
+
+  @override
+  void initState() {
+    super.initState();
+    getVisited().then((value) => {
+      if(value) {
+        setState(() {
+          showContent = false;
+        }),
+        _navigateMain()
+      }
+    });
+  }
+
+  Future<bool> getVisited() async {
+    return await _prefs.then((SharedPreferences prefs) {
+      return prefs.getBool('isVisited') ?? false;
+    });
+  }
+
+  setVisited() async {
+    await _prefs.then((SharedPreferences prefs) {
+      prefs.setBool('isVisited', true);
+    });
+  }
 
   void _nextPage() {
     page++;
@@ -47,6 +79,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _navigateMain() {
+    setVisited();
+    debugPrint("Main");
     //TODO
   }
 
@@ -55,41 +89,44 @@ class _HomePageState extends State<HomePage> {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(12),
-      child : Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Image(image: AssetImage('assets/banner.png'), height: 100),
-          Expanded(
-            flex: 1,
-            child: PageView(
-              physics: const NeverScrollableScrollPhysics(),
-              controller: controller,
-              children: const <Widget>[
-                Banner(image: "assets/image_1.png", title: "Get Schwifty", description: "Get ready to have some \nfun with Rick and Morty"),
-                Banner(image: "assets/image_2.png", title: "Wubba Lubba Dub Dub", description: "Welcome to the Rick \nand Morty universe"),
-                Banner(image: "assets/image_3.png", title: "To Infinity and Beyond", description: "Explore the multiverse \nwith Rick and Morty"),
-              ],
-            ),
-          ),
-          Container(
-              margin: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TextButton(
-                      onPressed: () { _navigateMain(); },
-                      child: const Text("Skip", style: TextStyle(decoration: TextDecoration.none, color: Colors.black, fontSize: 20))
-                  ),
-                  FloatingActionButton(
-                    onPressed: _nextPage,
-                    tooltip: 'Next',
-                    child: const Icon(Icons.arrow_forward),
-                  )
+      child : Visibility(
+        visible: showContent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Image(image: AssetImage('assets/banner.png'), height: 100),
+            Expanded(
+              flex: 1,
+              child: PageView(
+                physics: const NeverScrollableScrollPhysics(),
+                controller: controller,
+                children: const <Widget>[
+                  Banner(image: "assets/image_1.png", title: "Get Schwifty", description: "Get ready to have some \nfun with Rick and Morty"),
+                  Banner(image: "assets/image_2.png", title: "Wubba Lubba Dub Dub", description: "Welcome to the Rick \nand Morty universe"),
+                  Banner(image: "assets/image_3.png", title: "To Infinity and Beyond", description: "Explore the multiverse \nwith Rick and Morty"),
                 ],
-              )
-          )
-        ],
+              ),
+            ),
+            Container(
+                margin: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    TextButton(
+                        onPressed: () { _navigateMain(); },
+                        child: const Text("Skip", style: TextStyle(decoration: TextDecoration.none, color: Colors.black, fontSize: 20))
+                    ),
+                    FloatingActionButton(
+                      onPressed: _nextPage,
+                      tooltip: 'Next',
+                      child: const Icon(Icons.arrow_forward),
+                    )
+                  ],
+                )
+            )
+          ],
+        ),
       ),
     );
   }
