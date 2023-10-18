@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rick_and_morty/login.dart';
 
 class Onboarding extends StatelessWidget {
   const Onboarding({super.key});
   @override
   Widget build(BuildContext context) {
-    return  const Center(
-      child: OnboardingPage(title: "Onboarding"),
-    );
+    return const OnboardingPage(title: "Onboarding");
   }
 }
 
@@ -21,9 +21,41 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final PageController controller = PageController();
+
+  bool showContent = false;
   final int total = 3;
   int page = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    getVisited().then((value) => {
+      if(value) {
+        setState(() {
+          showContent = false;
+        }),
+        _navigateMain()
+      } else {
+        setState(() {
+          showContent = true;
+        }),
+      }
+    });
+  }
+
+  Future<bool> getVisited() async {
+    return await _prefs.then((SharedPreferences prefs) {
+      return prefs.getBool('isVisited') ?? false;
+    });
+  }
+
+  setVisited() async {
+    await _prefs.then((SharedPreferences prefs) {
+      prefs.setBool('isVisited', true);
+    });
+  }
 
   void _nextPage() {
     page++;
@@ -37,6 +69,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _navigateMain() {
+    setVisited();
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const Login()),
@@ -48,7 +81,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(12),
-      child : Column(
+      child : content());
+  }
+
+  Widget content() {
+    if(showContent) {
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Image(image: AssetImage('assets/banner.png'), height: 100),
@@ -58,9 +96,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
               physics: const NeverScrollableScrollPhysics(),
               controller: controller,
               children: const <Widget>[
-                Banner(image: "assets/image_1.png", title: "Get Schwifty", description: "Get ready to have some \nfun with Rick and Morty"),
-                Banner(image: "assets/image_2.png", title: "Wubba Lubba Dub Dub", description: "Welcome to the Rick \nand Morty universe"),
-                Banner(image: "assets/image_3.png", title: "To Infinity and Beyond", description: "Explore the multiverse \nwith Rick and Morty"),
+                Banner(image: "assets/image_1.png",
+                    title: "Get Schwifty",
+                    description: "Get ready to have some \nfun with Rick and Morty"),
+                Banner(image: "assets/image_2.png",
+                    title: "Wubba Lubba Dub Dub",
+                    description: "Welcome to the Rick \nand Morty universe"),
+                Banner(image: "assets/image_3.png",
+                    title: "To Infinity and Beyond",
+                    description: "Explore the multiverse \nwith Rick and Morty"),
               ],
             ),
           ),
@@ -71,8 +115,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   TextButton(
-                      onPressed: () { _navigateMain(); },
-                      child: const Text("Skip", style: TextStyle(decoration: TextDecoration.none, color: Colors.black, fontSize: 20))
+                      onPressed: () {
+                        _navigateMain();
+                      },
+                      child: const Text("Skip", style: TextStyle(
+                          decoration: TextDecoration.none,
+                          color: Colors.black,
+                          fontSize: 20))
                   ),
                   FloatingActionButton(
                     onPressed: _nextPage,
@@ -82,9 +131,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ],
               )
           )
-        ],
-      ),
-    );
+        ]);
+    } else {
+      return const Center();
+    }
   }
 
 }

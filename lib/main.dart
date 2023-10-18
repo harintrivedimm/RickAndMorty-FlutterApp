@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rick_and_morty/home/details.dart';
-import 'package:rick_and_morty/home/home.dart';
 import 'package:rick_and_morty/onboarding.dart';
 
 void main() {
@@ -14,12 +12,13 @@ class RickAndMortyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Rick & Morty',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE6E0E9)),
         useMaterial3: true,
       ),
-      home: const Details(),
+      home: const Onboarding()
     );
   }
 }

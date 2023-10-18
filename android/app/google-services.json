@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "981450616323",
+    "project_id": "rickandmorty-flutter",
+    "storage_bucket": "rickandmorty-flutter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981450616323:android:6dfc890a86e9ef61656836",
+        "android_client_info": {
+          "package_name": "com.demo.rickandmorty.rick_and_morty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBb89gMeKwQd9bYWEocvJ2ZrMyaoLcK2Z0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
