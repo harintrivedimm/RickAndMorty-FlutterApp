@@ -1,4 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
+import 'package:rick_and_morty/Networking/data.dart';
+import 'package:rick_and_morty/Networking/rest_client.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -16,12 +20,12 @@ class HomePage extends StatefulWidget {
 
   @override
   State<HomePage> createState() => _HomePageState();
+
 }
 
 class _HomePageState extends State<HomePage> {
   int currentPageIndex = 0;
-
-  final List<String> entries = <String>['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  final logger = Logger();
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +46,7 @@ class _HomePageState extends State<HomePage> {
             currentPageIndex = index;
           });
         },
-        indicatorColor: Theme.of(context).primaryColor,
+        indicatorColor: const Color(0xFFE8DEF8),
         selectedIndex: currentPageIndex,
         destinations: const <Widget>[
           NavigationDestination(
@@ -58,13 +62,7 @@ class _HomePageState extends State<HomePage> {
       body: <Widget>[
         Container(
           alignment: Alignment.center,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(10),
-            itemCount: entries.length,
-            itemBuilder: (BuildContext context, int index) {
-              return CharacterItem(index: index, title: entries[index]);
-            }
-          ),
+          child: buildListView(context),
         ),
         Container(
           alignment: Alignment.center,
@@ -73,58 +71,107 @@ class _HomePageState extends State<HomePage> {
       ][currentPageIndex],
     );
   }
+
+  FutureBuilder<Result> buildListView(BuildContext context) {
+    final client = RestClient(Dio(BaseOptions(contentType: "application/json")));
+    return FutureBuilder<Result>(
+      future: client.getCharacters().catchError((obj) {
+        switch (obj.runtimeType) {
+          case DioException e:
+            final res = e.response;
+            logger.e('Got error : ${res?.statusCode} -> ${res?.statusMessage}');
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res?.statusMessage ?? '')));
+            return const Result();
+          default:
+            return const Result();
+        }
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          final Result? response = snapshot.data;
+          final List<Character>? list = response?.results;
+          return ListView.builder(
+              padding: const EdgeInsets.all(10),
+              itemCount: list?.length ?? 0,
+              itemBuilder: (BuildContext context, int index) {
+                return CharacterItem(index: index, obj: list![index]);
+              }
+          );
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+    );
+  }
 }
 
 class CharacterItem extends StatelessWidget {
   const CharacterItem({
     super.key,
     required this.index,
-    required this.title,
+    required this.obj,
   });
 
   final int index;
-  final String title;
+  final Character obj;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
-      child: Container(
-        height: 180,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.black26, Colors.grey, Colors.white],
-            begin: Alignment.bottomCenter, end: Alignment.center),
-        ),
-        child: Stack(children: [
-          const Image(image: AssetImage('assets/list_item.png'), height: 180, alignment: Alignment.center),
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        color: Colors.white,
+        elevation: 6,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
+        child: Column(
+          children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+            Image.network(obj.image ?? '', height: 160, fit: BoxFit.fill),
+            Container(
+              height: 160,
+              decoration: const BoxDecoration(gradient: LinearGradient(
+                colors: [Colors.black45, Colors.transparent, Colors.transparent],
+                begin: Alignment.bottomCenter,
+                end: Alignment.center))),
+          ]),
           Container(
+            color: Colors.white,
             alignment: Alignment.bottomCenter,
             padding: const EdgeInsets.all(10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  children: [
-                    Text('Name: $title', style: const TextStyle(color: Colors.black, fontSize: 20)),
-                    Text('Other: $title', style: const TextStyle(color: Colors.black, fontSize: 20))
-                  ],
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Name: ${obj.name}',
+                          style: const TextStyle(color: Colors.black, fontSize: 18),
+                          textAlign: TextAlign.left),
+                      Text('Species: ${obj.species}',
+                          style: const TextStyle(color: Colors.black, fontSize: 18),
+                          textAlign: TextAlign.left)
+                    ],
+                  )
                 ),
-              // ElevatedButton(
-              //     onPressed: () {
-              //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Card $index'), duration: const Duration(seconds: 2)));
-              //     },
-              //     style: ElevatedButton.styleFrom(
-              //       padding: const EdgeInsets.all(6),
-              //       shape: const StadiumBorder(),
-              //       backgroundColor: Theme.of(context).primaryColor
-              //     ),
-              //   child: const Icon(Icons.arrow_forward, color: Colors.black),
-              // ),
-            ]),
-          )
-        ]),
+                ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Card $index'), duration: const Duration(seconds: 2)));
+                  },
+                  style: ElevatedButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  backgroundColor: const Color(0xFFE8DEF8)),
+                  child: const Icon(Icons.arrow_forward, color: Colors.black),
+                )]
+            )),
+          ],
+        ),
       ),
     );
   }

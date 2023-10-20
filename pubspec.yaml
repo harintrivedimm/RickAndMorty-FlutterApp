@@ -38,17 +38,26 @@ dependencies:
   shared_preferences: ^2.2.2
   firebase_core: ^2.18.0
   firebase_auth: ^4.11.0
+  retrofit: ^4.0.3
+  dio: ^5.3.3
+  logger: any  #for logging purpose
+  json_annotation: ^4.8.1
+  built_value: ^8.6.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  retrofit_generator: ^8.0.0
+  build_runner: '>=2.3.0 <4.0.0'
+  built_value_generator: ^8.6.3
+  json_serializable: ^6.7.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

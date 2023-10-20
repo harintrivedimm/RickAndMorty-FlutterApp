@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rick_and_morty/home/home.dart';
 import 'package:rick_and_morty/onboarding.dart';
 
 void main() {
@@ -18,7 +19,7 @@ class RickAndMortyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE6E0E9)),
         useMaterial3: true,
       ),
-      home: const Onboarding()
+      home: const Home()
     );
   }
 }
